@@ -1,7 +1,7 @@
 /**
- *  Tyco Door/Window Sensor
+ *  Visonic Door/Window Sensor
  *
- *  Copyright 2015 SmartThings
+ *  Copyright 2017 Tomas Axerot
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -16,18 +16,20 @@
 import physicalgraph.zigbee.clusters.iaszone.ZoneStatus
 
 metadata {
-	definition (name: "Tyco Door/Window Sensor", namespace: "smartthings", author: "SmartThings") {
+	definition (name: "Visonic Door/Window Sensor", namespace: "tomasaxerot", author: "Tomas Axerot") {
 		capability "Battery"
 		capability "Configuration"
 		capability "Contact Sensor"
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability "Health Check"
+        capability "Sensor"
 
 		command "enrollResponse"
 
 
-		fingerprint inClusters: "0000,0001,0003,0402,0500,0020,0B05", outClusters: "0019", manufacturer: "Visonic", model: "MCT-340 E"
+		fingerprint inClusters: "0000,0001,0003,0402,0500,0020,0B05", outClusters: "0019", manufacturer: "Visonic", model: "MCT-340 SMA"
+        fingerprint inClusters: "0000,0001,0003,0402,0500,0020,0B05", outClusters: "0019", manufacturer: "Visonic", model: "MCT-340 E"
 	}
 
 	simulator {
@@ -38,40 +40,42 @@ metadata {
 		input title: "Temperature Offset", description: "This feature allows you to correct any temperature variations by selecting an offset. Ex: If your sensor consistently reports a temp that's 5 degrees too warm, you'd enter \"-5\". If 3 degrees too cold, enter \"+3\".", displayDuringSetup: false, type: "paragraph", element: "paragraph"
 		input "tempOffset", "number", title: "Degrees", description: "Adjust temperature by this many degrees", range: "*..*", displayDuringSetup: false
 	}
-
-	tiles {
-    	standardTile("contact", "device.contact", width: 2, height: 2) {
-			state("open", label:'${name}', icon:"st.contact.contact.open", backgroundColor:"#e86d13")
-			state("closed", label:'${name}', icon:"st.contact.contact.closed", backgroundColor:"#00A0DC")
+    
+    tiles(scale: 2) {
+		multiAttributeTile(name: "contact", type: "generic", width: 6, height: 4) {
+			tileAttribute("device.contact", key: "PRIMARY_CONTROL") {
+				attributeState "open", label: '${name}', icon: "st.contact.contact.open", backgroundColor: "#e86d13"
+				attributeState "closed", label: '${name}', icon: "st.contact.contact.closed", backgroundColor: "#00A0DC"
+			}
 		}
 
-		valueTile("temperature", "device.temperature", inactiveLabel: false) {
-			state "temperature", label:'${currentValue}°',
-				backgroundColors:[
-					[value: 31, color: "#153591"],
-					[value: 44, color: "#1e9cbb"],
-					[value: 59, color: "#90d2a7"],
-					[value: 74, color: "#44b621"],
-					[value: 84, color: "#f1d801"],
-					[value: 95, color: "#d04e00"],
-					[value: 96, color: "#bc2323"]
-				]
+		valueTile("temperature", "device.temperature", inactiveLabel: false, width: 2, height: 2) {
+			state "temperature", label: '${currentValue}°',
+					backgroundColors: [
+							[value: 31, color: "#153591"],
+							[value: 44, color: "#1e9cbb"],
+							[value: 59, color: "#90d2a7"],
+							[value: 74, color: "#44b621"],
+							[value: 84, color: "#f1d801"],
+							[value: 95, color: "#d04e00"],
+							[value: 96, color: "#bc2323"]
+					]
 		}
-		valueTile("battery", "device.battery", decoration: "flat", inactiveLabel: false) {
-			state "battery", label:'${currentValue}% battery', unit:""
-		}
-
-        standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat") {
-			state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
+		valueTile("battery", "device.battery", decoration: "flat", inactiveLabel: false, width: 2, height: 2) {
+			state "battery", label: '${currentValue}% battery', unit: ""
 		}
 
-		standardTile("configure", "device.configure", inactiveLabel: false, decoration: "flat") {
+		standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action: "refresh.refresh", icon: "st.secondary.refresh"
+		}
+        
+        standardTile("configure", "device.configure", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
 			state "configure", label:'', action:"configuration.configure", icon:"st.secondary.configure"
 		}
 
-		main (["contact", "temperature"])
-		details(["contact","temperature","battery","refresh","configure"])
-	}
+		main(["contact", "temperature"])
+		details(["contact", "temperature", "battery", "refresh", "configure"])
+	}	
 }
 
 def parse(String description) {
